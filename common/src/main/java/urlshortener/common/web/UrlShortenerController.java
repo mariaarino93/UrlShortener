@@ -72,9 +72,12 @@ public class UrlShortenerController {
 	@RequestMapping(value = "/link", method = RequestMethod.POST)
 	public ResponseEntity<ShortURL> shortener(@RequestParam("url") String url,
 											  @RequestParam(value = "sponsor", required = false) String sponsor,
+											  @RequestParam(value = "customURL", required = false) String customURL,
 											  HttpServletRequest request) {
+
 		ShortURL su = createAndSaveIfValid(url, sponsor, UUID
-				.randomUUID().toString(), extractIP(request));
+					.randomUUID().toString(), extractIP(request), customURL);
+
 		if (su != null) {
 			HttpHeaders h = new HttpHeaders();
 			h.setLocation(su.getUri());
@@ -85,18 +88,40 @@ public class UrlShortenerController {
 	}
 
 	private ShortURL createAndSaveIfValid(String url, String sponsor,
-										  String owner, String ip) {
+										  String owner, String ip, String customURL) {
 		UrlValidator urlValidator = new UrlValidator(new String[] { "http",
 				"https" });
 		if (urlValidator.isValid(url)) {
-			String id = Hashing.murmur3_32()
-					.hashString(url, StandardCharsets.UTF_8).toString();
-			ShortURL su = new ShortURL(id, url,
-					linkTo(
-							methodOn(UrlShortenerController.class).redirectTo(
-									id, null)).toUri(), sponsor, new Date(
+			ShortURL su;
+			if(customURL != null && !customURL.isEmpty()) {
+
+				ShortURL l = shortURLRepository.findByKey(customURL);
+
+				if (l ==null) {
+					su = new ShortURL(customURL, url,
+							linkTo(
+									methodOn(UrlShortenerController.class).redirectTo(
+											customURL, null)).toUri(), sponsor, new Date(
 							System.currentTimeMillis()), owner,
-					HttpStatus.TEMPORARY_REDIRECT.value(), true, ip, null);
+							HttpStatus.TEMPORARY_REDIRECT.value(), true, ip, null);
+				} else {
+					return null;
+				}
+
+
+
+			} else {
+				//Random short URL
+				String id = Hashing.murmur3_32()
+						.hashString(url, StandardCharsets.UTF_8).toString();
+				su = new ShortURL(id, url,
+						linkTo(
+								methodOn(UrlShortenerController.class).redirectTo(
+										id, null)).toUri(), sponsor, new Date(
+						System.currentTimeMillis()), owner,
+						HttpStatus.TEMPORARY_REDIRECT.value(), true, ip, null);
+			}
+
 			return shortURLRepository.save(su);
 		} else {
 			return null;
