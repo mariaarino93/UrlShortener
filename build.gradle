@@ -89,5 +89,14 @@ project ('team') {
 
     dependencies {
         compile project(':common')
+
+        compile 'org.hsqldb:hsqldb'
+
+        compile 'org.webjars:bootstrap:3.3.5'
+        compile 'org.webjars:jquery:2.1.4'
+
+        // Testing framework
+        testCompile 'org.springframework.boot:spring-boot-starter-test'
+        testCompile 'org.apache.httpcomponents:httpclient'
     }
 }

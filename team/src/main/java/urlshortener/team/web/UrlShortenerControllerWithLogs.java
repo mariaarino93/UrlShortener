@@ -5,10 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import urlshortener.common.domain.ShortURL;
-import urlshortener.common.web.UrlShortenerController;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -24,12 +21,15 @@ public class UrlShortenerControllerWithLogs extends UrlShortenerController {
 		return super.redirectTo(id, request);
 	}
 
+/*
 	@Override
-	public ResponseEntity<ShortURL> shortener(@RequestParam("url") String url,
-											  @RequestParam(value = "sponsor", required = false) String sponsor,
-											  @RequestParam(value = "customURL", required = false) String customURL,
-											  HttpServletRequest request) {
+	public ResponseEntity<Link> shortener(@RequestParam("originalURL") String url,
+										  @RequestParam(value = "createQr", required = false) Boolean createQr,
+										  @RequestParam(value = "checkSafe", required = false) Boolean checkSafe,
+										  @RequestParam(value = "customURL", required = false) String customURL,
+										  HttpServletRequest request) {
 		logger.info("Requested new short for uri {}", url);
-		return super.shortener(url, sponsor, customURL, request);
+		return super.shortener(url, createQr, checkSafe, customURL, request);
 	}
+*/
 }

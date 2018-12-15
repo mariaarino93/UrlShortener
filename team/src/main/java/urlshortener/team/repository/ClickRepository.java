@@ -1,14 +1,14 @@
-package urlshortener.common.repository;
+package urlshortener.team.repository;
+
+import urlshortener.team.domain.Click;
 
 import java.util.List;
 
-import urlshortener.common.domain.Click;
-
 public interface ClickRepository {
 
-	List<Click> findByHash(String hash);
+	List<Click> findByCustomUrl(String customUrl);
 
-	Long clicksByHash(String hash);
+	Long clicksByCustomUrl(String customUrl);
 
 	Click save(Click cl);
 

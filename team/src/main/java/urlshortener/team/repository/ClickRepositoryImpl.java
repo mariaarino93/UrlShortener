@@ -1,4 +1,4 @@
-package urlshortener.common.repository;
+package urlshortener.team.repository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,14 +9,13 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import urlshortener.team.domain.Click;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.List;
-
-import urlshortener.common.domain.Click;
 
 
 @Repository
@@ -25,8 +24,7 @@ public class ClickRepositoryImpl implements ClickRepository {
 	private static final Logger log = LoggerFactory
 			.getLogger(ClickRepositoryImpl.class);
 
-	private static final RowMapper<Click> rowMapper = (rs, rowNum) -> new Click(rs.getLong("id"), rs.getString("hash"),
-            rs.getDate("created"), rs.getString("referrer"),
+	private static final RowMapper<Click> rowMapper = (rs, rowNum) -> new Click(rs.getLong("id"), rs.getString("customUrl"),
             rs.getString("browser"), rs.getString("platform"),
             rs.getString("ip"), rs.getString("country"));
 
@@ -37,12 +35,12 @@ public class ClickRepositoryImpl implements ClickRepository {
 	}
 
 	@Override
-	public List<Click> findByHash(String hash) {
+	public List<Click> findByCustomUrl(String customUrl) {
 		try {
-			return jdbc.query("SELECT * FROM click WHERE hash=?",
-					new Object[] { hash }, rowMapper);
+			return jdbc.query("SELECT * FROM click WHERE customUrl=?",
+					new Object[] { customUrl }, rowMapper);
 		} catch (Exception e) {
-			log.debug("When select for hash " + hash, e);
+			log.debug("When select for customUrl " + customUrl, e);
 			return Collections.emptyList();
 		}
 	}
@@ -54,16 +52,14 @@ public class ClickRepositoryImpl implements ClickRepository {
 			jdbc.update(conn -> {
                 PreparedStatement ps = conn
                         .prepareStatement(
-                                "INSERT INTO CLICK VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                                "INSERT INTO CLICK VALUES (?, ?, ?, ?, ?, ?)",
                                 Statement.RETURN_GENERATED_KEYS);
                 ps.setNull(1, Types.BIGINT);
-                ps.setString(2, cl.getHash());
-                ps.setDate(3, cl.getCreated());
-                ps.setString(4, cl.getReferrer());
-                ps.setString(5, cl.getBrowser());
-                ps.setString(6, cl.getPlatform());
-                ps.setString(7, cl.getIp());
-                ps.setString(8, cl.getCountry());
+                ps.setString(2, cl.getCustomUrl());
+                ps.setString(3, cl.getBrowser());
+                ps.setString(4, cl.getPlatform());
+                ps.setString(5, cl.getIp());
+                ps.setString(6, cl.getCountry());
                 return ps;
             }, holder);
 			if (holder.getKey() != null) {
@@ -84,11 +80,11 @@ public class ClickRepositoryImpl implements ClickRepository {
 
 	@Override
 	public void update(Click cl) {
-		log.info("ID2: {} navegador: {} SO: {} Date: {}", cl.getId(), cl.getBrowser(), cl.getPlatform(), cl.getCreated());
+		log.info("ID2: {} navegador: {} SO: {}", cl.getId(), cl.getBrowser(), cl.getPlatform());
 		try {
 			jdbc.update(
-					"update click set hash=?, created=?, referrer=?, browser=?, platform=?, ip=?, country=? where id=?",
-					cl.getHash(), cl.getCreated(), cl.getReferrer(),
+					"update click set customUrl=?,browser=?, platform=?, ip=?, country=? where id=?",
+					cl.getCustomUrl(),
 					cl.getBrowser(), cl.getPlatform(), cl.getIp(),
 					cl.getCountry(), cl.getId());
 			
@@ -139,12 +135,12 @@ public class ClickRepositoryImpl implements ClickRepository {
 	}
 
 	@Override
-	public Long clicksByHash(String hash) {
+	public Long clicksByCustomUrl(String customUrl) {
 		try {
 			return jdbc
-					.queryForObject("select count(*) from click where hash = ?", new Object[]{hash}, Long.class);
+					.queryForObject("select count(*) from click where customUrl = ?", new Object[]{customUrl}, Long.class);
 		} catch (Exception e) {
-			log.debug("When counting hash "+hash, e);
+			log.debug("When counting customUrl "+customUrl, e);
 		}
 		return -1L;
 	}

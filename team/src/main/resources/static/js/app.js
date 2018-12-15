@@ -1,18 +1,35 @@
 $(document).ready(
     function() {
         $("#shortener").submit(
+
             function(event) {
+
                 event.preventDefault();
+
+
+                var data = {}
+                var Form = this;
+
+                $.each(this.elements, function(i, v){
+                    var input = $(v);
+                    data[input.attr("name")] = input.val();
+                    delete data["undefined"];
+                });
+
                 $.ajax({
                     type : "POST",
                     url : "/link",
-                    data : $(this).serialize(),
+                    dataType : "json",
+                    data: JSON.stringify(data),
+                    context: Form,
+                    //data : $(this).serialize(),
+                    //data: $.param({originalUrl: $('#originalUrl').val()}),
                     success : function(msg) {
                         $("#result").html(
                             "<div class='alert alert-success lead'><a target='_blank' href='"
-                            + msg.uri
+                            + msg.shortUrl
                             + "'>"
-                            + msg.uri
+                            + msg.shortUrl
                             + "</a></div>");
                     },
                     error : function() {

@@ -4,10 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
-import urlshortener.common.repository.ClickRepository;
-import urlshortener.common.repository.ClickRepositoryImpl;
-import urlshortener.common.repository.ShortURLRepository;
-import urlshortener.common.repository.ShortURLRepositoryImpl;
+import urlshortener.team.repository.ClickRepository;
+import urlshortener.team.repository.ClickRepositoryImpl;
+import urlshortener.team.repository.LinkRepository;
+import urlshortener.team.repository.LinkRepositoryImpl;
 
 @Configuration
 public class PersistenceContext {
@@ -16,8 +16,8 @@ public class PersistenceContext {
     protected JdbcTemplate jdbc;
 
 	@Bean
-	ShortURLRepository shortURLRepository() {
-		return new ShortURLRepositoryImpl(jdbc);
+    LinkRepository shortURLRepository() {
+		return new LinkRepositoryImpl(jdbc);
 	}
  	
 	@Bean
