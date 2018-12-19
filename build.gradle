@@ -29,10 +29,10 @@ subprojects {
     }
 }
 
-project(':common') {
+project(':team') {
     eclipse {
         project {
-            name = 'UrlShortener.common'
+            name = 'UrlShortener.team'
         }
     }
 
@@ -55,17 +55,17 @@ project(':common') {
     }
 }
 
-project(':demo') {
+project(':team') {
     eclipse {
         project {
-            name = 'UrlShortener.demo'
+            name = 'UrlShortener.team'
         }
     }
 
     apply plugin: 'org.springframework.boot'
 
     dependencies {
-        compile project(':common')
+        compile project(':team')
 
         runtime 'org.hsqldb:hsqldb'
 
@@ -88,7 +88,7 @@ project ('team') {
     apply plugin: 'org.springframework.boot'
 
     dependencies {
-        compile project(':common')
+        compile project(':team')
 
         compile 'org.hsqldb:hsqldb'
 
