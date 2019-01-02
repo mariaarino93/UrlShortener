@@ -1,5 +1,6 @@
 package urlshortener.team.web;
 
+
 import com.google.common.hash.Hashing;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
@@ -19,16 +20,19 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import static urlshortener.team.web.UrlChecking.isAccessable;
+import static urlshortener.team.web.UrlChecking.isSafe;
 
 public class UrlShortenerController {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(UrlShortenerController.class);
 
-
-	@Autowired
+    @Autowired
 	protected LinkRepository linkRepository;
 
 	@Autowired
@@ -69,23 +73,40 @@ public class UrlShortenerController {
 
 		LOG.info("POST petition received: Original URL:"+l.getOriginalUrl()+" Custom URL: "+l.getCustomUrl());
 
-		if(isAccessable(l.getOriginalUrl(),6000)) {
-			Link link = createAndSaveIfValid(l.getOriginalUrl(), l.getCreateQr(), l.getCheckSafe(), l.getCustomUrl());
+        try {
 
-			if (link != null ) {
-				HttpHeaders h = new HttpHeaders();
-				h.setLocation(link.getUri());
+            if(isSafe(l.getOriginalUrl())) {
 
-				// TODO De momento en el link que se devuelve no se incluye ningún dato de qrImage ni location
-				ResponseLink respLink = new ResponseLink(link.getUri().toString(),link.getOriginalUrl(),null,null);
+                if(isAccessable(l.getOriginalUrl(),6000)) {
+                    Link link = createAndSaveIfValid(l.getOriginalUrl(), l.getCreateQr(), l.getCheckSafe(), l.getCustomUrl());
 
-				return new ResponseEntity<>(respLink, h, HttpStatus.CREATED);
-			} else {
-				return new ResponseEntity("Error, custom Url is already used",HttpStatus.BAD_REQUEST);
-			}
-		} else {
-			return new ResponseEntity("Error, web not accessible",HttpStatus.BAD_REQUEST);
-		}
+                    if (link != null ) {
+                        HttpHeaders h = new HttpHeaders();
+                        h.setLocation(link.getUri());
+
+                        // TODO De momento en el link que se devuelve no se incluye ningún dato de qrImage ni location
+                        ResponseLink respLink = new ResponseLink(link.getUri().toString(),link.getOriginalUrl(),null,null);
+
+                        return new ResponseEntity<>(respLink, h, HttpStatus.CREATED);
+
+                    } else {
+                        return new ResponseEntity("Error, custom Url is already used",HttpStatus.BAD_REQUEST);
+                    }
+
+                } else {
+                    return new ResponseEntity("Error, web not accessible",HttpStatus.BAD_REQUEST);
+                }
+
+            } else {
+                return new ResponseEntity("Error, Url is not safe",HttpStatus.BAD_REQUEST);
+            }
+
+        } catch (Exception e) {
+            System.out.println(e);
+            return new ResponseEntity("Error checking URL safety",HttpStatus.BAD_REQUEST);
+        }
+
+
 
 	}
 
@@ -95,9 +116,8 @@ public class UrlShortenerController {
 		if (urlValidator.isValid(url)) {
 			Link link;
 
-			//TODO Comprobar si el enlace es seguro y asignar a esta variable
-			// se podría restringir según la variable Boolean checkSafe
-			Boolean isSafe = true;
+            //TODO Comprobar si es necesario comprobar la seguridad de forma recurrente con checkSafe
+            Boolean isSafe = true;
 
 			if(customURL != null && !customURL.isEmpty()) {
 
@@ -137,24 +157,5 @@ public class UrlShortenerController {
 		}
 	}
 
-	public static boolean isAccessable(String url, int timeout) {
-		// Otherwise an exception may be thrown on invalid SSL certificates.
-		url = url.replaceFirst("https", "http");
-
-		try {
-			HttpURLConnection connection = (HttpURLConnection) new URL(url)
-					.openConnection();
-			connection.setConnectTimeout(timeout);
-			connection.setReadTimeout(timeout);
-			connection.setRequestMethod("HEAD");
-			int responseCode = connection.getResponseCode();
-			if (responseCode != 200) {
-				return false;
-			}
-		} catch (IOException exception) {
-			return false;
-		}
-		return true;
-	}
 
 }

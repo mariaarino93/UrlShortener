@@ -95,6 +95,8 @@ project ('team') {
         compile 'org.webjars:bootstrap:3.3.5'
         compile 'org.webjars:jquery:2.1.4'
 
+        compile 'com.google.apis:google-api-services-safebrowsing:v4-rev78-1.25.0'
+
         // Testing framework
         testCompile 'org.springframework.boot:spring-boot-starter-test'
         testCompile 'org.apache.httpcomponents:httpclient'
