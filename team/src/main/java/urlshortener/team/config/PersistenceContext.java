@@ -16,7 +16,7 @@ public class PersistenceContext {
     protected JdbcTemplate jdbc;
 
 	@Bean
-    LinkRepository shortURLRepository() {
+    LinkRepository linkRepository() {
 		return new LinkRepositoryImpl(jdbc);
 	}
  	

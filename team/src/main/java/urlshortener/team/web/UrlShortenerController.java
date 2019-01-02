@@ -17,7 +17,7 @@ import urlshortener.team.repository.LinkRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.net.URI;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -29,7 +29,7 @@ public class UrlShortenerController {
 
 
 	@Autowired
-	protected LinkRepository shortURLRepository;
+	protected LinkRepository linkRepository;
 
 	@Autowired
 	protected ClickRepository clickRepository;
@@ -37,7 +37,7 @@ public class UrlShortenerController {
 	@RequestMapping(value = "/{id:(?!link).*}", method = RequestMethod.GET)
 	public ResponseEntity<?> redirectTo(@PathVariable String id,
 			HttpServletRequest request) {
-		Link l = shortURLRepository.findByKey(id);
+		Link l = linkRepository.findByKey(id);
 		if (l != null) {
 			createAndSaveClick(id, extractIP(request));
 			return createSuccessfulRedirectToResponse(l);
@@ -62,47 +62,31 @@ public class UrlShortenerController {
 		LOG.info("extractIP created: Header:"+h+" OriginalURL: "+l.getOriginalUrl());
 		return new ResponseEntity<>(h, HttpStatus.valueOf(HttpStatus.TEMPORARY_REDIRECT.value()));
 	}
-/*
-	@RequestMapping(value = "/link", method = RequestMethod.POST)
-	public ResponseEntity<Link> shortener(@RequestParam("originalURL") String url,
-										  @RequestParam(value = "createQr", required = false) Boolean createQr,
-										  @RequestParam(value = "checkSafe", required = false) Boolean checkSafe,
-										  @RequestParam(value = "customURL", required = false) String customURL,
-										  HttpServletRequest request) {
-		LOG.info("POST petition received: Original URL:"+url+" Custom URL: "+customURL);
 
-		Link link = createAndSaveIfValid(url, createQr, checkSafe, customURL);
-
-		if (link != null) {
-			HttpHeaders h = new HttpHeaders();
-			h.setLocation(link.getUri());
-			LOG.info("shortener created response: Link: "+link+" Header: "+h);
-			return new ResponseEntity<>(link, h, HttpStatus.CREATED);
-		} else {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-		}
-	}
-*/
 	@RequestMapping(value = "/link", method = RequestMethod.POST)
 	public ResponseEntity<ResponseLink> shortener(@RequestBody Link l,
 												  HttpServletRequest request) throws IOException {
 
 		LOG.info("POST petition received: Original URL:"+l.getOriginalUrl()+" Custom URL: "+l.getCustomUrl());
 
-		Link link = createAndSaveIfValid(l.getOriginalUrl(), l.getCreateQr(), l.getCheckSafe(), l.getCustomUrl());
+		if(isAccessable(l.getOriginalUrl(),6000)) {
+			Link link = createAndSaveIfValid(l.getOriginalUrl(), l.getCreateQr(), l.getCheckSafe(), l.getCustomUrl());
 
-		if (link != null) {
-			HttpHeaders h = new HttpHeaders();
-			h.setLocation(link.getUri());
+			if (link != null ) {
+				HttpHeaders h = new HttpHeaders();
+				h.setLocation(link.getUri());
 
-			// TODO De momento en el link que se devuelve no se incluye ningún dato de qrImage ni location
-			ResponseLink respLink = new ResponseLink(link.getUri().toString(),link.getOriginalUrl(),null,null);
+				// TODO De momento en el link que se devuelve no se incluye ningún dato de qrImage ni location
+				ResponseLink respLink = new ResponseLink(link.getUri().toString(),link.getOriginalUrl(),null,null);
 
-			LOG.info("shortener created response: Link: "+link+" Header: "+h);
-			return new ResponseEntity<>(respLink, h, HttpStatus.CREATED);
+				return new ResponseEntity<>(respLink, h, HttpStatus.CREATED);
+			} else {
+				return new ResponseEntity("Error, custom Url is already used",HttpStatus.BAD_REQUEST);
+			}
 		} else {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity("Error, web not accessible",HttpStatus.BAD_REQUEST);
 		}
+
 	}
 
 	private Link createAndSaveIfValid(String url, Boolean createQr, Boolean checkSafe, String customURL) {
@@ -117,9 +101,7 @@ public class UrlShortenerController {
 
 			if(customURL != null && !customURL.isEmpty()) {
 
-				Link l = shortURLRepository.findByKey(customURL);
-
-
+				Link l = linkRepository.findByKey(customURL);
 
 				// Checks if customUrl doesn't exist yet
 				if (l == null) {
@@ -130,8 +112,6 @@ public class UrlShortenerController {
 				} else {
 					return null;
 				}
-
-
 
 			} else {
 				//Random short URL
@@ -144,9 +124,37 @@ public class UrlShortenerController {
 						createQr,checkSafe,isSafe);
 			}
 
-			return shortURLRepository.save(link);
+			LOG.info(	"Original: "+link.getOriginalUrl()+
+							" Custom: "+link.getCustomUrl()+
+							" Checksafe: "+link.getCheckSafe()+
+							" CreateQR: "+link.getCreateQr()+
+							" URI: "+link.getUri()+
+							" IsSafe: "+link.getIsSafe());
+
+			return linkRepository.save(link);
 		} else {
 			return null;
 		}
 	}
+
+	public static boolean isAccessable(String url, int timeout) {
+		// Otherwise an exception may be thrown on invalid SSL certificates.
+		url = url.replaceFirst("https", "http");
+
+		try {
+			HttpURLConnection connection = (HttpURLConnection) new URL(url)
+					.openConnection();
+			connection.setConnectTimeout(timeout);
+			connection.setReadTimeout(timeout);
+			connection.setRequestMethod("HEAD");
+			int responseCode = connection.getResponseCode();
+			if (responseCode != 200) {
+				return false;
+			}
+		} catch (IOException exception) {
+			return false;
+		}
+		return true;
+	}
+
 }
