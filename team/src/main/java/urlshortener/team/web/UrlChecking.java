@@ -5,9 +5,12 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.safebrowsing.Safebrowsing;
 import com.google.api.services.safebrowsing.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -23,6 +26,9 @@ public class UrlChecking {
     private static final List<String> GOOGLE_PLATFORM_TYPES = Arrays.asList(new String[]{"ANY_PLATFORM"});
     private static final List<String> GOOGLE_THREAT_ENTRYTYPES = Arrays.asList(new String[]{"URL"});
     private static NetHttpTransport httpTransport;
+
+    private static final Logger LOG = LoggerFactory
+            .getLogger(UrlChecking.class);
 
 
     // Unsafe URL to test: https://malware.testing.google.test/testing/malware/
@@ -90,14 +96,17 @@ public class UrlChecking {
             connection.setReadTimeout(timeout);
             connection.setRequestMethod("HEAD");
             int responseCode = connection.getResponseCode();
-            if (responseCode != 200) {
+            LOG.info("Checking accessibility : "+url+" -> "+responseCode);
+            if (responseCode >= 400) {
                 return false;
             }
         } catch (IOException exception) {
+            LOG.error("IOException when checking isAccessable");
             return false;
         }
         return true;
     }
+
 
 
 

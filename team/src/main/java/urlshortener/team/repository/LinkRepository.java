@@ -20,4 +20,8 @@ public interface LinkRepository {
 
 	List<Link> list(Long limit, Long offset);
 
+	List<String> listCheckSafeUrls();
+
+	List<Link> findByOriginalUrlWithSafeCheck(String originalUrl);
+
 }

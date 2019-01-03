@@ -62,7 +62,7 @@ public class LinkRepositoryImpl implements LinkRepository {
 	@Override
 	public Link mark(Link link, boolean isSafe) {
 		try {
-			jdbc.update("UPDATE link SET isSafe=? WHERE customUrl=?", isSafe,
+			jdbc.update("UPDATE link SET isSafe=? WHERE CUSTOMURL=?", isSafe,
 					link.getCustomUrl());
 			Link res = new Link();
 			BeanUtils.copyProperties(link, res);
@@ -112,6 +112,28 @@ public class LinkRepositoryImpl implements LinkRepository {
 					new Object[] { limit, offset }, rowMapper);
 		} catch (Exception e) {
 			log.debug("When select for limit {} and offset {}", limit, offset, e);
+			return Collections.emptyList();
+		}
+	}
+
+	@Override
+	public List<String> listCheckSafeUrls() {
+		try {
+			return jdbc.queryForList("SELECT ORIGINALURL FROM link WHERE CHECKSAFE=TRUE", String.class);
+		}
+		catch (Exception e) {
+			log.debug("When select targets from checkSafe");
+			return Collections.emptyList();
+		}
+	}
+
+	@Override
+	public List<Link> findByOriginalUrlWithSafeCheck(String originalUrl) {
+		try {
+			return jdbc.query("SELECT * FROM link WHERE ORIGINALURL = ? AND CHECKSAFE=TRUE",
+					new Object[]{originalUrl}, rowMapper);
+		} catch (Exception e) {
+			log.debug("When select for originalUrl " + originalUrl, e);
 			return Collections.emptyList();
 		}
 	}

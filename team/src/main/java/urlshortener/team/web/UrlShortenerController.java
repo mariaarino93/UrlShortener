@@ -20,19 +20,22 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-import static urlshortener.team.web.UrlChecking.isAccessable;
-import static urlshortener.team.web.UrlChecking.isSafe;
+import static urlshortener.team.web.UrlChecking.*;
+
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 
 public class UrlShortenerController {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(UrlShortenerController.class);
 
-    @Autowired
+	ScheduledTasks scheduledTasks = new ScheduledTasks();
+
+	@Autowired
 	protected LinkRepository linkRepository;
 
 	@Autowired
@@ -71,13 +74,14 @@ public class UrlShortenerController {
 	public ResponseEntity<ResponseLink> shortener(@RequestBody Link l,
 												  HttpServletRequest request) throws IOException {
 
-		LOG.info("POST petition received: Original URL:"+l.getOriginalUrl()+" Custom URL: "+l.getCustomUrl());
+		LOG.info("POST petition received: Original URL: "+l.getOriginalUrl()+" Custom URL: "+l.getCustomUrl());
 
         try {
 
             if(isSafe(l.getOriginalUrl())) {
 
                 if(isAccessable(l.getOriginalUrl(),6000)) {
+
                     Link link = createAndSaveIfValid(l.getOriginalUrl(), l.getCreateQr(), l.getCheckSafe(), l.getCustomUrl());
 
                     if (link != null ) {
