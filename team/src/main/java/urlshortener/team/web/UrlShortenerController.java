@@ -2,6 +2,7 @@ package urlshortener.team.web;
 
 
 import com.google.common.hash.Hashing;
+import com.google.zxing.WriterException;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,5 +162,10 @@ public class UrlShortenerController {
 		}
 	}
 
+	@RequestMapping(value ="/{id}/qr", method = RequestMethod.GET)
+	@ResponseBody
+	public byte[] createQR(@PathVariable String id) throws IOException, WriterException {
+		return QRGenerator.getQRCodeImage(id);
+	}
 
 }
