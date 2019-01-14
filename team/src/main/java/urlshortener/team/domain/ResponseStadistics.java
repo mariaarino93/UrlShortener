@@ -1,7 +1,5 @@
 package urlshortener.team.domain;
 
-import net.minidev.json.JSONObject;
-
 import java.util.List;
 
 public class ResponseStadistics {

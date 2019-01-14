@@ -62,10 +62,8 @@ public class UrlShortenerController {
 	}
 
 	private void createAndSaveClick(String customUrl, String ip, String[] datos_localizacion, String browser, String platform) {
-		Click cl = new Click(null,customUrl,browser,platform,datos_localizacion[0],datos_localizacion[5],datos_localizacion[2], new Date(System.currentTimeMillis()));
-		System.out.println("Guadar click "+ cl);
+		Click cl = new Click(null,customUrl,browser,platform,datos_localizacion[0],datos_localizacion[2],datos_localizacion[1], new Date(System.currentTimeMillis()));
 		cl=clickRepository.save(cl);
-		System.out.println("Guadar bbbd "+ cl);
 		LOG.info(cl!=null?"["+customUrl+"] saved with id ["+cl.getId()+"]":"["+customUrl+"] was not saved");
 	}
 

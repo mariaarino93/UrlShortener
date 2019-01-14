@@ -36,19 +36,35 @@ public class UrlLocation {
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(c.getInputStream())
         );
-        int i = 0;
-        String []datos = new String[7];
+
+        boolean fin=false;
+        String []datos = new String[3];
         reader.readLine();
-        while (i<7){
+
+        while (fin!=true){
             String location = reader.readLine();
             String []parts = location.split(":");
+
             String value_aux = parts[1].replace(",","");
-            String value = value_aux.replaceAll("\"", "");
-            String  key = parts[0].replaceAll("\"", "");
-            System.out.println("n:"+value);
-            datos[i] = value;
-            //System.out.println("texto"+i+": "+ datos[i]);
-            i++;
+            String value_inf = value_aux.replaceAll("\"", "");
+
+            String key_aux = parts[0].replaceAll("\"", "");
+            String key = key_aux.replace(",","");
+
+            System.out.println("n:"+value_inf);
+            System.out.println("k:"+ key.trim());
+
+            if (key.trim().equals("ip")){
+                datos[0]=value_inf;
+            }
+            if (key.trim().equals("city")){
+                datos[1]=value_inf;
+            }
+            if (key.trim().equals("country_name")){
+                datos[2]=value_inf;
+                fin=true;
+
+            }
         }
 
         reader.close();
