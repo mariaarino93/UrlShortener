@@ -42,7 +42,8 @@ public class UrlLocation {
         while (i<7){
             String location = reader.readLine();
             String []parts = location.split(":");
-            String value = parts[1].replace(",","");
+            String value_aux = parts[1].replace(",","");
+            String value = value_aux.replaceAll("\"", "");
             String  key = parts[0].replaceAll("\"", "");
             System.out.println("n:"+value);
             datos[i] = value;
@@ -54,11 +55,17 @@ public class UrlLocation {
         return datos;
     }
 
-    public static String getUserAgent(HttpServletRequest request) {
+    public static String getBrowser(HttpServletRequest request) {
         UserAgent userAgent = UserAgent.parseUserAgentString(request.getHeader("User-Agent"));
         String browser = userAgent.getBrowser().getName() + " " + userAgent.getBrowserVersion();
-        String os = userAgent.getOperatingSystem().getName();
+        System.out.println("Navegador"+browser);
+        return browser;
+    }
 
+    public static String getOs(HttpServletRequest request) {
+        UserAgent userAgent = UserAgent.parseUserAgentString(request.getHeader("User-Agent"));
+        String os = userAgent.getOperatingSystem().getName();
+        System.out.println("SO"+os);
         return os;
     }
 }

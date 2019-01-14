@@ -3,6 +3,7 @@ package urlshortener.team.web;
 
 import com.google.common.hash.Hashing;
 import com.google.zxing.WriterException;
+import net.minidev.json.JSONObject;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
 
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -47,19 +49,20 @@ public class UrlShortenerController {
 		Link l = linkRepository.findByKey(id);
 		UrlLocation loc = new UrlLocation();
 		String[] datos_loc = loc.location(extractIP(request));
-		String user_agent =loc.getUserAgent(request);
+		String browser =loc.getBrowser(request);
+		String platform =loc.getOs(request);
 
 		if (l != null) {
 			LOG.info("----l EXISTS---- "+l.getCustomUrl());
-			createAndSaveClick(id, extractIP(request), datos_loc, user_agent);
+			createAndSaveClick(id, extractIP(request), datos_loc, browser, platform);
 			return createSuccessfulRedirectToResponse(l);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 
-	private void createAndSaveClick(String customUrl, String ip, String[] datos_localizacion, String user_agent) {
-		Click cl = new Click(null,customUrl,user_agent,null,datos_localizacion[0],datos_localizacion[5],datos_localizacion[2], new Date(System.currentTimeMillis()));
+	private void createAndSaveClick(String customUrl, String ip, String[] datos_localizacion, String browser, String platform) {
+		Click cl = new Click(null,customUrl,browser,platform,datos_localizacion[0],datos_localizacion[5],datos_localizacion[2], new Date(System.currentTimeMillis()));
 		System.out.println("Guadar click "+ cl);
 		cl=clickRepository.save(cl);
 		System.out.println("Guadar bbbd "+ cl);
@@ -180,11 +183,15 @@ public class UrlShortenerController {
 		Long numOfClicks = clickRepository.clicksByCustomUrl(id);
 		System.out.println("NumOfClicks "+ numOfClicks );
 		List<Stadistics> loc = clickRepository.topCity(10, id);
+
 		System.out.println("info city "+loc.listIterator().next().getCity());
 		System.out.println("info city "+ loc.listIterator().next().getCountry());
 
 		LOG.info("info city " + loc);
+
+
 		ResponseStadistics respStats = new ResponseStadistics(numOfClicks,loc);
+
 
 		LOG.info("GET STATS");
 
