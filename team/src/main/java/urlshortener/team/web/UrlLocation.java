@@ -1,4 +1,5 @@
 package urlshortener.team.web;
+import eu.bitwalker.useragentutils.UserAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
@@ -54,29 +55,10 @@ public class UrlLocation {
     }
 
     public static String getUserAgent(HttpServletRequest request) {
-        System.out.println("NAVEGADOR"+request.getHeader("user-agent"));
-        String userAgent = request.getHeader("user-agent");
+        UserAgent userAgent = UserAgent.parseUserAgentString(request.getHeader("User-Agent"));
+        String browser = userAgent.getBrowser().getName() + " " + userAgent.getBrowserVersion();
+        String os = userAgent.getOperatingSystem().getName();
 
-        String os;
-        if (userAgent.toLowerCase().indexOf("windows") >= 0 )
-        {
-            os = "Windows";
-        } else if(userAgent.toLowerCase().indexOf("mac") >= 0)
-        {
-            os = "Mac";
-        } else if(userAgent.toLowerCase().indexOf("x11") >= 0)
-        {
-            os = "Unix";
-        } else if(userAgent.toLowerCase().indexOf("android") >= 0)
-        {
-            os = "Android";
-        } else if(userAgent.toLowerCase().indexOf("iphone") >= 0)
-        {
-            os = "IPhone";
-        }else{
-            os = "UnKnown, More-Info: "+userAgent;
-        }
-        System.out.println("NAVEGADOR_Parseado "+os);
         return os;
     }
 }
