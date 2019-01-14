@@ -11,9 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import urlshortener.team.domain.Click;
-import urlshortener.team.domain.Link;
-import urlshortener.team.domain.ResponseLink;
+import urlshortener.team.domain.*;
 import urlshortener.team.repository.ClickRepository;
 import urlshortener.team.repository.LinkRepository;
 
@@ -21,13 +19,14 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.sql.Date;
+import java.util.List;
 
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 import static urlshortener.team.web.UrlChecking.*;
 
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 public class UrlShortenerController {
@@ -44,19 +43,26 @@ public class UrlShortenerController {
 
 	@RequestMapping(value = "/{id:(?!link).*}", method = RequestMethod.GET)
 	public ResponseEntity<?> redirectTo(@PathVariable String id,
-			HttpServletRequest request) {
+			HttpServletRequest request) throws IOException {
 		Link l = linkRepository.findByKey(id);
+		UrlLocation loc = new UrlLocation();
+		String[] datos_loc = loc.location(extractIP(request));
+		String user_agent =loc.getUserAgent(request);
+
 		if (l != null) {
-			createAndSaveClick(id, extractIP(request));
+			LOG.info("----l EXISTS---- "+l.getCustomUrl());
+			createAndSaveClick(id, extractIP(request), datos_loc, user_agent);
 			return createSuccessfulRedirectToResponse(l);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 
-	private void createAndSaveClick(String customUrl, String ip) {
-		Click cl = new Click(null,customUrl,null,null,ip,null);
+	private void createAndSaveClick(String customUrl, String ip, String[] datos_localizacion, String user_agent) {
+		Click cl = new Click(null,customUrl,user_agent,null,datos_localizacion[0],datos_localizacion[5],datos_localizacion[2], new Date(System.currentTimeMillis()));
+		System.out.println("Guadar click "+ cl);
 		cl=clickRepository.save(cl);
+		System.out.println("Guadar bbbd "+ cl);
 		LOG.info(cl!=null?"["+customUrl+"] saved with id ["+cl.getId()+"]":"["+customUrl+"] was not saved");
 	}
 
@@ -115,7 +121,7 @@ public class UrlShortenerController {
 
 	}
 
-	private Link createAndSaveIfValid(String url, Boolean createQr, Boolean checkSafe, String customURL) {
+	private Link createAndSaveIfValid(String url, Boolean createQr, Boolean checkSafe, String customURL) throws IOException {
 		UrlValidator urlValidator = new UrlValidator(new String[] { "http",
 				"https" });
 		if (urlValidator.isValid(url)) {
@@ -166,6 +172,23 @@ public class UrlShortenerController {
 	@ResponseBody
 	public byte[] createQR(@PathVariable String id) throws IOException, WriterException {
 		return QRGenerator.getQRCodeImage(id);
+	}
+
+	@RequestMapping(value = "/{id}/stats", method = RequestMethod.GET)
+	public ResponseEntity<ResponseStadistics> viewStats (@PathVariable String id,
+														 HttpServletRequest request) throws IOException {
+		Long numOfClicks = clickRepository.clicksByCustomUrl(id);
+		System.out.println("NumOfClicks "+ numOfClicks );
+		List<Stadistics> loc = clickRepository.topCity(10, id);
+		System.out.println("info city "+loc.listIterator().next().getCity());
+		System.out.println("info city "+ loc.listIterator().next().getCountry());
+
+		LOG.info("info city " + loc);
+		ResponseStadistics respStats = new ResponseStadistics(numOfClicks,loc);
+
+		LOG.info("GET STATS");
+
+		return new ResponseEntity(respStats, HttpStatus.ACCEPTED);
 	}
 
 }

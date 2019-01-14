@@ -10,6 +10,8 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import urlshortener.team.domain.Click;
+import urlshortener.team.domain.ResponseStadistics;
+import urlshortener.team.domain.Stadistics;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -26,7 +28,8 @@ public class ClickRepositoryImpl implements ClickRepository {
 
 	private static final RowMapper<Click> rowMapper = (rs, rowNum) -> new Click(rs.getLong("id"), rs.getString("customUrl"),
             rs.getString("browser"), rs.getString("platform"),
-            rs.getString("ip"), rs.getString("country"));
+            rs.getString("ip"), rs.getString("country"),rs.getString("city"), rs.getDate("time"));
+	private static final RowMapper<Stadistics> rowMapper_s = (rs, rowNum) -> new Stadistics(rs.getString("country"), rs.getString("city"));
 
 	private JdbcTemplate jdbc;
 
@@ -52,7 +55,7 @@ public class ClickRepositoryImpl implements ClickRepository {
 			jdbc.update(conn -> {
                 PreparedStatement ps = conn
                         .prepareStatement(
-                                "INSERT INTO CLICK VALUES (?, ?, ?, ?, ?, ?)",
+                                "INSERT INTO CLICK VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                                 Statement.RETURN_GENERATED_KEYS);
                 ps.setNull(1, Types.BIGINT);
                 ps.setString(2, cl.getCustomUrl());
@@ -60,9 +63,12 @@ public class ClickRepositoryImpl implements ClickRepository {
                 ps.setString(4, cl.getPlatform());
                 ps.setString(5, cl.getIp());
                 ps.setString(6, cl.getCountry());
+                ps.setString(7, cl.getCity());
+                ps.setDate(8, cl.getTime());
                 return ps;
             }, holder);
 			if (holder.getKey() != null) {
+				log.debug("Key from database not null");
 				new DirectFieldAccessor(cl).setPropertyValue("id", holder.getKey()
 								.longValue());
 			} else {
@@ -70,9 +76,11 @@ public class ClickRepositoryImpl implements ClickRepository {
 			}
 		} catch (DuplicateKeyException e) {
 			log.debug("When insert for click with id " + cl.getId(), e);
+			System.out.println("When insert for click with id " + cl.getId());
 			return cl;
 		} catch (Exception e) {
 			log.debug("When insert a click", e);
+			System.out.println("When insert a click");
 			return null;
 		}
 		return cl;
@@ -143,6 +151,17 @@ public class ClickRepositoryImpl implements ClickRepository {
 			log.debug("When counting customUrl "+customUrl, e);
 		}
 		return -1L;
+	}
+
+	@Override
+	public List<Stadistics> topCity(int limit, String customUrl) {
+		try {
+			return jdbc.query("SELECT country, city, count(city) AS TopCity FROM click WHERE customUrl = ? GROUP BY city, country ORDER BY TopCity DESC LIMIT ?",
+					new Object[]{customUrl, limit}, rowMapper_s);
+		} catch (Exception e) {
+			log.debug("When select for limit " + limit , e);
+			return Collections.emptyList();
+		}
 	}
 
 }

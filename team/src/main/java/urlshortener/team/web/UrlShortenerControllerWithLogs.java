@@ -6,8 +6,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import urlshortener.team.domain.Link;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
 @RestController
 public class UrlShortenerControllerWithLogs extends UrlShortenerController {
@@ -16,7 +18,13 @@ public class UrlShortenerControllerWithLogs extends UrlShortenerController {
 
 	@Override
 	@GetMapping("/{id:(?!link|index).*}")
-	public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) {
+	public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) throws IOException {
+		Link l = linkRepository.findByKey(id);
+		if (l != null) {
+			logger.info("----l EXISTS---- " + l.getCustomUrl());
+		}else{
+			logger.info("----NO EXISTS---- ");
+		}
 		logger.info("Requested redirection with hash {}", id);
 		return super.redirectTo(id, request);
 	}

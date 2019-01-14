@@ -22,5 +22,6 @@ CREATE TABLE CLICK(
 	PLATFORM	VARCHAR(50),				-- Platform
 	IP			VARCHAR(20),				  -- IP
 	COUNTRY		VARCHAR(50),					-- Country
+	CITY        VARCHAR(50),                --City
 	TIME TIMESTAMP
 )
