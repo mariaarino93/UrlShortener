@@ -3,7 +3,6 @@ package urlshortener.team.web;
 
 import com.google.common.hash.Hashing;
 import com.google.zxing.WriterException;
-import net.minidev.json.JSONObject;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
