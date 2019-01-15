@@ -15,5 +15,8 @@ public class MockLinkRepository {
     public static Link badUrl() {
         return new Link(null,null,null,false,false,false);
     }
+    public static Link urlSafe() {
+        return new Link("google", "http://www.google.es/", null, null, true, true);
+    }
 
 }

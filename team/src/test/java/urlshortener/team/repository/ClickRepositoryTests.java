@@ -25,9 +25,9 @@ public class ClickRepositoryTests {
         db = new EmbeddedDatabaseBuilder().setType(HSQL)
                 .addScript("schema-hsqldb.sql").build();
         jdbc = new JdbcTemplate(db);
-        LinkRepository shortUrlRepository = new LinkRepositoryImpl(jdbc);
-        shortUrlRepository.save(MockLinkRepository.url1());
-        shortUrlRepository.save(MockLinkRepository.url2());
+        LinkRepositoryImpl linkUrlRepository = new LinkRepositoryImpl(jdbc);
+        linkUrlRepository.save(MockLinkRepository.url1());
+        linkUrlRepository.save(MockLinkRepository.url2());
         repository = new ClickRepositoryImpl(jdbc);
     }
 
