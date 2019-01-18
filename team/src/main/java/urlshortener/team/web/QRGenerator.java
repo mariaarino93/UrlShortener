@@ -21,6 +21,7 @@ public class QRGenerator {
     public static byte[] getQRCodeImage(String text) throws WriterException, IOException {
         int width = 350;
         int height = 350;
+        text = "http://locahost:8080/"+text;
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
 
